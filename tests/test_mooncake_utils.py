@@ -433,6 +433,19 @@ def _make_retry_client(store):
 
 
 class TestBatchResultValidation:
+    @pytest.mark.parametrize("error_type", [TypeError, ValueError, OverflowError])
+    def test_result_length_error_is_wrapped(self, error_type):
+        from transfer_queue.storage.clients.mooncake_client import _validate_batch_result_count
+
+        error = error_type("invalid result length")
+        results = MagicMock()
+        results.__len__.side_effect = error
+
+        with pytest.raises(RuntimeError, match="returned a non-sized result, expected 2 codes") as exc_info:
+            _validate_batch_result_count("batch_remove", ["k0", "k1"], results)
+
+        assert exc_info.value.__cause__ is error
+
     def test_upsert_retry_short_result_is_raised(self, monkeypatch):
         monkeypatch.setattr("transfer_queue.storage.clients.mooncake_client.RETRY_DELAY_SECONDS", 0)
         client = _make_retry_client(_SequenceStore([[-1, -1], [0]]))

@@ -52,7 +52,7 @@ def _validate_batch_result_count(operation: str, keys: list[str], results: Any) 
     """Require one Mooncake result code for every requested key."""
     try:
         actual = len(results)
-    except TypeError as error:
+    except Exception as error:
         raise RuntimeError(f"{operation} returned a non-sized result, expected {len(keys)} codes") from error
     if actual != len(keys):
         raise RuntimeError(f"{operation} returned {actual} results, expected {len(keys)}")
